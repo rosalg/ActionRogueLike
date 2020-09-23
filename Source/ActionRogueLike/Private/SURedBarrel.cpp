@@ -19,6 +19,14 @@ ASURedBarrel::ASURedBarrel()
 	RadialForceComp = CreateDefaultSubobject<URadialForceComponent>("RadialForceComp");
 	RadialForceComp->SetupAttachment(MeshComp);
 
+	MeshComp->SetSimulatePhysics(true);
+
+	RadialForceComp->Radius = 700;
+	RadialForceComp->ImpulseStrength = 2000;
+	RadialForceComp->bImpulseVelChange = true;
+	RadialForceComp->bAutoActivate = false;
+	MeshComp->OnComponentHit.AddDynamic(this, &ASURedBarrel::OnCompHit);
+	MeshComp->SetCollisionProfileName("PhysicsActor");
 }
 
 // Called when the game starts or when spawned
@@ -33,5 +41,9 @@ void ASURedBarrel::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ASURedBarrel::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
+	RadialForceComp->FireImpulse();
 }
 

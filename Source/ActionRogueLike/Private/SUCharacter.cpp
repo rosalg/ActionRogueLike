@@ -5,6 +5,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera\CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "SUInteractionComponent.h"
 
 // Sets default values
 ASUCharacter::ASUCharacter()
@@ -19,6 +20,7 @@ ASUCharacter::ASUCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(SpringArmComp);
 
+	InteractionComp = CreateDefaultSubobject<USUInteractionComponent>("InteractionComp");
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
@@ -60,13 +62,24 @@ void ASUCharacter::MoveRight(float Value) {
 
 void ASUCharacter::PrimaryAttack() {
 
+	PlayAnimMontage(AttackAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASUCharacter::PrimaryAttack_TimeElapsed, 0.2f);
+
+}
+
+void ASUCharacter::PrimaryAttack_TimeElapsed() {
 	FVector handLocation = GetMesh()->GetSocketLocation("Muzzle_01");
 
-	FTransform SpawnTM = FTransform(GetControlRotation() , handLocation);
+	FTransform SpawnTM = FTransform(GetControlRotation(), handLocation);
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+}
+
+void ASUCharacter::PrimaryInteract() {
+	InteractionComp->PrimaryInteract();
 }
 
 // Called to bind functionality to input
@@ -82,5 +95,6 @@ void ASUCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASUCharacter::PrimaryAttack);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASUCharacter::PrimaryInteract);
 }
 

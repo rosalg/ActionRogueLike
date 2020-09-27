@@ -9,6 +9,7 @@
 class UCameraComponent;
 class USpringArmComponent;
 class USUInteractionComponent;
+class ASUTeleportProjectile;
 class UAnimMontage;
 
 UCLASS()
@@ -19,17 +20,28 @@ class ACTIONROGUELIKE_API ASUCharacter : public ACharacter
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
-	TSubclassOf<AActor> ProjectileClass;
+	TSubclassOf<AActor> PrimaryProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<AActor> UltimateProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<AActor> TeleportProjectileClass;
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	UAnimMontage* AttackAnim;
 
 	FTimerHandle TimerHandle_PrimaryAttack;
+	FTimerHandle TimerHandle_Teleport;
+
 
 
 public:
 	// Sets default values for this character's properties
 	ASUCharacter();
+
+	FTimerHandle* GetTeleportTimerHandle();
+
 
 protected:
 
@@ -46,9 +58,15 @@ protected:
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
-	void PrimaryAttack();
-	void PrimaryAttack_TimeElapsed();
+	void PrimaryAttack(int ProjectileNum);
+	DECLARE_DELEGATE_OneParam(Attack, int);
+	UFUNCTION()
+	void PrimaryAttack_TimeElapsed(int ProjectileNum);
 	void PrimaryInteract();
+	UFUNCTION()
+	void TeleportDurationExpired(ASUTeleportProjectile* Bullet);
+	UFUNCTION()
+	void AnimationDurationExpired(ASUTeleportProjectile* Bullet);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

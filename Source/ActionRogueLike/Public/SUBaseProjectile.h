@@ -4,24 +4,32 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "SUBaseProjectile.h"
-#include "ASUMagicProjectile.generated.h"
+#include "SUBaseProjectile.generated.h"
 
 class USphereComponent;
 class UProjectileMovementComponent;
 class UParticleSystemComponent;
 
 UCLASS()
-class ACTIONROGUELIKE_API AASUMagicProjectile : public ASUBaseProjectile
+class ACTIONROGUELIKE_API ASUBaseProjectile : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AASUMagicProjectile();
+	ASUBaseProjectile();
 
 protected:
-	
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USphereComponent* SphereComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UProjectileMovementComponent* MovementComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UParticleSystemComponent* EffectComp;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

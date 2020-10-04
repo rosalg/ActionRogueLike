@@ -9,6 +9,10 @@
 #include "DrawDebugHelpers.h"
 #include "SUInteractionComponent.h"
 #include "SUTeleportProjectile.h"
+#include "SUAttributeComponent.h"
+#include "Particles/ParticleSystem.h"
+#include "Kismet/GameplayStatics.h"
+
 
 const int PRIMARY_PROJ_INDEX = 0;
 const int ULTIMATE_PROJ_INDEX = 1;
@@ -28,10 +32,15 @@ ASUCharacter::ASUCharacter()
 	CameraComp->SetupAttachment(SpringArmComp);
 
 	InteractionComp = CreateDefaultSubobject<USUInteractionComponent>("InteractionComp");
+	
+	AttributeComp = CreateDefaultSubobject<USUAttributeComponent>("AttributeComp");
+	AttributeComp->OnHealthChanged.AddDynamic(this, &ASUCharacter::OnHealthChanged);
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
 	bUseControllerRotationYaw = false;
+
+	
 }
 
 // Called when the game starts or when spawned
@@ -46,6 +55,24 @@ void ASUCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+/*
+ * This function is listening to the event OnHealthChanged this is a part of our AttributeComponent. 
+ * 
+ * When invoked (check damaging or healing script (i.e. ASUMagicProjectile) to see broadcast), it will update the TimeToHit parameter on
+ * its static mesh component.
+ * 
+ * PARAMETERS
+ *		AActor* InstigatorActor - Actor that caused the healing or damage
+ *		USUAttributeComponent* OwningComp - Component that this event belongs to
+ *		float NewHealth - Health post change
+ *		float Delta - The amount health changed
+ * RETURN
+ *		None
+*/
+void ASUCharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta) {
+	Cast<ACharacter>(this)->GetMesh()->SetScalarParameterValueOnMaterials("TimeToHit", GetWorld()->TimeSeconds);
 }
 
 void ASUCharacter::MoveForward(float Value) {
@@ -80,11 +107,12 @@ void ASUCharacter::PrimaryAttack(int ProjectileNum) {
 
 void ASUCharacter::PrimaryAttack_TimeElapsed(int ProjectileNum) {
 	FVector handLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, handLocation, GetActorRotation());
 	FCollisionObjectQueryParams ObjectQueryParams;
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
-	// Set up raycast
+	// Set up raycast, lining up shot with camera and hand rather than directly from where our character is facing.
 	FVector start = CameraComp->GetComponentLocation();
 	FVector end = start + (CameraComp->GetForwardVector() * 100000);
 	FHitResult Hit;
@@ -96,11 +124,11 @@ void ASUCharacter::PrimaryAttack_TimeElapsed(int ProjectileNum) {
 	else {
 		bulletDirection = UKismetMathLibrary::FindLookAtRotation(handLocation, end);
 	}
-	// Before said getControllerRotation()
 	FTransform SpawnTM = FTransform(bulletDirection, handLocation);
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnParams.Instigator = this;
+	// Determine which projectile to spawn based on input parameter
 	if (ProjectileNum == PRIMARY_PROJ_INDEX) {
 		GetWorld()->SpawnActor<AActor>(PrimaryProjectileClass, SpawnTM, SpawnParams);
 	}
@@ -118,7 +146,6 @@ void ASUCharacter::PrimaryAttack_TimeElapsed(int ProjectileNum) {
 
 
 void ASUCharacter::TeleportDurationExpired(ASUTeleportProjectile* Bullet) {
-	UE_LOG(LogTemp, Warning, TEXT("TELEPORTING BC TIME EXPIRED :("));
 	Bullet->Detonate();
 	FTimerHandle DestroyTimerHandle;
 	FTimerDelegate DestroyDelegate;

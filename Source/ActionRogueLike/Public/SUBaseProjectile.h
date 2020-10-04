@@ -9,8 +9,9 @@
 class USphereComponent;
 class UProjectileMovementComponent;
 class UParticleSystemComponent;
+class UAudioComponent;
 
-UCLASS()
+UCLASS(ABSTRACT)
 class ACTIONROGUELIKE_API ASUBaseProjectile : public AActor
 {
 	GENERATED_BODY()
@@ -29,6 +30,13 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UParticleSystemComponent* EffectComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UAudioComponent* AudioCompInAir;
+
+
+	// Somethings to consider...
+	// Add virtual void OnActorHit(***PARAMETERS***), because this makes it so you can override it in the child
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

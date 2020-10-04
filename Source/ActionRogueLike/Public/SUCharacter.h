@@ -11,6 +11,8 @@ class USpringArmComponent;
 class USUInteractionComponent;
 class ASUTeleportProjectile;
 class UAnimMontage;
+class USUAttributeComponent;
+class UParticleSystem;
 
 UCLASS()
 class ACTIONROGUELIKE_API ASUCharacter : public ACharacter
@@ -30,6 +32,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	UAnimMontage* AttackAnim;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	UParticleSystem* MuzzleFlash;
 
 	FTimerHandle TimerHandle_PrimaryAttack;
 	FTimerHandle TimerHandle_Teleport;
@@ -56,6 +61,9 @@ protected:
 	UPROPERTY(VisibleAnywhere);
 	USUInteractionComponent* InteractionComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	USUAttributeComponent* AttributeComp;
+
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void PrimaryAttack(int ProjectileNum);
@@ -67,6 +75,9 @@ protected:
 	void TeleportDurationExpired(ASUTeleportProjectile* Bullet);
 	UFUNCTION()
 	void AnimationDurationExpired(ASUTeleportProjectile* Bullet);
+
+	UFUNCTION()
+	void OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

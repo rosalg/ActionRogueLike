@@ -10,6 +10,8 @@
 class USphereComponent;
 class UProjectileMovementComponent;
 class UParticleSystemComponent;
+class USoundCue;
+class UParticleSystem;
 
 UCLASS()
 class ACTIONROGUELIKE_API AASUMagicProjectile : public ASUBaseProjectile
@@ -21,7 +23,16 @@ public:
 	AASUMagicProjectile();
 
 protected:
-	
+
+	UFUNCTION()
+	void OnActorOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UPROPERTY(EditAnywhere, Category = "Instances")
+	USoundCue* ImpactSound;
+
+	UPROPERTY(EditAnywhere, Category = "Instances")
+	UParticleSystem* ImpactParticle;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

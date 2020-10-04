@@ -33,7 +33,7 @@ void ASUTeleportProjectile::OnCompHit(UPrimitiveComponent* HitComp, AActor* Othe
 	ASUCharacter* PC = (ASUCharacter*)GetInstigator();
 	FTimerHandle* TempHandle = PC->GetTeleportTimerHandle();
 	GetWorldTimerManager().ClearTimer(*TempHandle);
-	FHitResult HitRes;
+	//MovementComp->
 	Detonate();
 	GetWorldTimerManager().SetTimer(Delay, this, &ASUTeleportProjectile::Teleport, 0.2f);
 }

@@ -6,6 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Components/AudioComponent.h"
 
 // Sets default values
 ASUBaseProjectile::ASUBaseProjectile()
@@ -26,6 +27,10 @@ ASUBaseProjectile::ASUBaseProjectile()
 	MovementComp->bInitialVelocityInLocalSpace = true;
 	MovementComp->ProjectileGravityScale = 0;
 	
+	AudioCompInAir = CreateDefaultSubobject<UAudioComponent>("AudioCompInAir");
+	AudioCompInAir->SetupAttachment(SphereComp);
+
+
 }
 
 // Called when the game starts or when spawned

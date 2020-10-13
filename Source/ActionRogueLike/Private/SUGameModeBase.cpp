@@ -22,17 +22,7 @@ void ASUGameModeBase::StartPlay() {
 }
 
 void ASUGameModeBase::SpawnBotTimerElapsed() {
-	UEnvQueryInstanceBlueprintWrapper* QueryInstance = UEnvQueryManager::RunEQSQuery(this, SpawnBotQuery, this, EEnvQueryRunMode::RandomBest5Pct, nullptr);
-	if (ensure(QueryInstance))
-		QueryInstance->GetOnQueryFinishedEvent().AddDynamic(this, &ASUGameModeBase::OnQueryCompleted);
-}
 
-void ASUGameModeBase::OnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus) {
-	if (QueryStatus != EEnvQueryStatus::Success) {
-		UE_LOG(LogTemp, Warning, TEXT("Spawn bot EQS Query Failed!"));
-		return;
-	}
-	UE_LOG(LogTemp, Warning, TEXT("Querying"));
 	int32 NumAliveBots = 0;
 	for (TActorIterator<ASUAICharacter> It(GetWorld()); It; ++It) {
 		ASUAICharacter* Bot = *It;
@@ -44,7 +34,7 @@ void ASUGameModeBase::OnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryI
 	}
 
 	float MaxBotCount = 10.0f;
-	
+
 	if (DifficultyCurve) {
 		MaxBotCount = DifficultyCurve->GetFloatValue(GetWorld()->TimeSeconds);
 	}
@@ -53,8 +43,16 @@ void ASUGameModeBase::OnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryI
 		return;
 	}
 
-	
+	UEnvQueryInstanceBlueprintWrapper* QueryInstance = UEnvQueryManager::RunEQSQuery(this, SpawnBotQuery, this, EEnvQueryRunMode::RandomBest5Pct, nullptr);
+	if (ensure(QueryInstance))
+		QueryInstance->GetOnQueryFinishedEvent().AddDynamic(this, &ASUGameModeBase::OnQueryCompleted);
+}
 
+void ASUGameModeBase::OnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus) {
+	if (QueryStatus != EEnvQueryStatus::Success) {
+		return;
+	}
+	
 	TArray<FVector> Locations = QueryInstance->GetResultsAsLocations();
 
 	if (Locations.Num() > 0) {

@@ -22,7 +22,7 @@ bool USUAttributeComponent::ApplyHealthChange(float Delta) {
 	Health += Delta;
 	Health = FMath::Clamp(Health, 0.0f, MaxHealth);
 	if (OldHealth == Health) return false;
-	OnHealthChanged.Broadcast(nullptr, this, Health, Delta);
+	OnHealthChanged.Broadcast(nullptr, this, Health, Health - OldHealth);
 
 	return true;
 }

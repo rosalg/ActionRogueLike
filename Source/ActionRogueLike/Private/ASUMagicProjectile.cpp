@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystem.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 
 
 // Sets default values
@@ -15,18 +16,21 @@ AASUMagicProjectile::AASUMagicProjectile()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AASUMagicProjectile::OnActorOverlap);
-
+	MovementComp->InitialSpeed = 3000.f;
+	Damage = -20.f;
 }
 
 void AASUMagicProjectile::OnActorOverlap(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
-	if (OtherActor && OtherActor != GetInstigator()) {
+	AActor* inst = GetInstigator();
+	if (OtherActor && OtherActor != inst) {
 		USUAttributeComponent* AttributeComp = Cast<USUAttributeComponent>(OtherActor->GetComponentByClass(USUAttributeComponent::StaticClass()));
 		if (AttributeComp) {
-			AttributeComp->ApplyHealthChange(-20.0f);
-			UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, GetActorLocation(), GetActorRotation());
-			Destroy();
+			AttributeComp->ApplyHealthChange(Damage);
 		}
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, GetActorLocation(), GetActorRotation());
+		Destroy();
+		
 	}
 }
 

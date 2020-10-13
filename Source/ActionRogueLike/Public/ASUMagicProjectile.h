@@ -24,13 +24,16 @@ public:
 
 protected:
 
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	float Damage;
+
 	UFUNCTION()
 	void OnActorOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	UPROPERTY(EditAnywhere, Category = "Instances")
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	USoundCue* ImpactSound;
 
-	UPROPERTY(EditAnywhere, Category = "Instances")
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	UParticleSystem* ImpactParticle;
 
 	// Called when the game starts or when spawned

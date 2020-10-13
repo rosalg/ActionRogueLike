@@ -13,7 +13,9 @@ USUAttributeComponent::USUAttributeComponent()
 
 }
 
-
+float USUAttributeComponent::GetCurrentHealth() {
+	return Health;
+}
 
 bool USUAttributeComponent::ApplyHealthChange(float Delta) {
 	float OldHealth = Health;

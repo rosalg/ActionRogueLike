@@ -50,8 +50,6 @@ public:
 
 protected:
 
-
-
 	UPROPERTY(VisibleAnywhere);
 	USpringArmComponent* SpringArmComp;
 

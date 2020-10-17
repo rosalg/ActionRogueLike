@@ -12,7 +12,7 @@ EBTNodeResult::Type USUBTTaskNode_Heal::ExecuteTask(UBehaviorTreeComponent& Owne
 	if (AIController) {
 		USUAttributeComponent* AttributeComp = Cast<USUAttributeComponent>(AIController->GetPawn()->GetComponentByClass(USUAttributeComponent::StaticClass()));
 		if (AttributeComp) {
-			AttributeComp->ApplyHealthChange(50.f);
+			AttributeComp->ApplyHealthChange(AIController->GetPawn(), 50.f);
 			return EBTNodeResult::Succeeded;
 		}
 	}

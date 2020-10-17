@@ -6,6 +6,11 @@
 #include "GameFramework/Character.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "ASUMagicProjectile.h"
+#include "SUAttributeComponent.h"
+
+USUBTTaskNode_RangedAttack::USUBTTaskNode_RangedAttack() {
+	MaxBulletSpread = 2.0f;
+}
 
 EBTNodeResult::Type USUBTTaskNode_RangedAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) {
 	AAIController* MyController = OwnerComp.GetAIOwner();
@@ -23,8 +28,15 @@ EBTNodeResult::Type USUBTTaskNode_RangedAttack::ExecuteTask(UBehaviorTreeCompone
 			return EBTNodeResult::Failed;
 		}
 
+		if (!USUAttributeComponent::IsAlive(TargetActor)) {
+			return EBTNodeResult::Failed;
+		}
+
 		FVector Direction = TargetActor->GetActorLocation() - MuzzleLocation;
 		FRotator MuzzleRotation = Direction.Rotation();
+
+		MuzzleRotation.Pitch += FMath::RandRange(0.0f, MaxBulletSpread);
+		MuzzleRotation.Yaw += FMath::RandRange(-MaxBulletSpread, MaxBulletSpread);
 
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -36,3 +48,4 @@ EBTNodeResult::Type USUBTTaskNode_RangedAttack::ExecuteTask(UBehaviorTreeCompone
 	}
 	return EBTNodeResult::Failed;
 }
+

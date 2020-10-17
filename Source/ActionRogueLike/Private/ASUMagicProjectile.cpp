@@ -25,7 +25,7 @@ void AASUMagicProjectile::OnActorOverlap(UPrimitiveComponent* HitComp, AActor* O
 	if (OtherActor && OtherActor != inst) {
 		USUAttributeComponent* AttributeComp = Cast<USUAttributeComponent>(OtherActor->GetComponentByClass(USUAttributeComponent::StaticClass()));
 		if (AttributeComp) {
-			AttributeComp->ApplyHealthChange(Damage);
+			AttributeComp->ApplyHealthChange(GetInstigator(), Damage);
 		}
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, GetActorLocation(), GetActorRotation());

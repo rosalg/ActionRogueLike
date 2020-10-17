@@ -47,6 +47,8 @@ public:
 
 	FTimerHandle* GetTeleportTimerHandle();
 
+	UFUNCTION(exec)
+	void FullHeal();
 
 protected:
 

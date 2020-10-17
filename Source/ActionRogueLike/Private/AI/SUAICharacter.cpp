@@ -7,6 +7,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "SUAttributeComponent.h"
 #include "BrainComponent.h"
+#include "SUWorldUserWidget.h"
 
 // Sets default values
 ASUAICharacter::ASUAICharacter()
@@ -14,6 +15,8 @@ ASUAICharacter::ASUAICharacter()
 	PawnSensingComp = CreateDefaultSubobject<UPawnSensingComponent>("PawnSensingComp");
 
 	AttributeComp = CreateDefaultSubobject<USUAttributeComponent>("AttributeComp");
+
+	TimeToHitParamName = "TimeToHit";
 }
 
 void ASUAICharacter::PostInitializeComponents() {
@@ -24,19 +27,32 @@ void ASUAICharacter::PostInitializeComponents() {
 }
 
 void ASUAICharacter::OnPawnSeen(APawn* Pawn) {
+	SetTargetActor(Pawn);
+}
+
+void ASUAICharacter::SetTargetActor(AActor* NewTarget) {
 	AAIController* AIC = Cast<AAIController>(GetController());
 	if (AIC) {
-		UBlackboardComponent* BBComp = AIC->GetBlackboardComponent();
-
-		BBComp->SetValueAsObject("TargetActor", Pawn);
-
+		 AIC->GetBlackboardComponent()->SetValueAsObject("TargetActor", NewTarget);
 	}
-
-
 }
 
 void ASUAICharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta) {
 	if (Delta < 0.0f) {
+
+		if (InstigatorActor != this) {
+			SetTargetActor(InstigatorActor);
+		}
+		if (ActiveHealthBar == nullptr) {
+			ActiveHealthBar = CreateWidget<USUWorldUserWidget>(GetWorld(), HealthBarWidgetClass);
+			if (ActiveHealthBar) {
+				ActiveHealthBar->AttachedActor = this;
+				ActiveHealthBar->AddToViewport();
+			}
+		}
+
+		GetMesh()->SetScalarParameterValueOnMaterials(TimeToHitParamName, GetWorld()->TimeSeconds);
+
 		if (NewHealth <= 0.0f) {
 			// Stop BT
 			AAIController* AIC = Cast<AAIController>(GetController());

@@ -163,6 +163,11 @@ FTimerHandle* ASUCharacter::GetTeleportTimerHandle() {
 	return &TimerHandle_Teleport;
 }
 
+void ASUCharacter::FullHeal()
+{
+	AttributeComp->ApplyHealthChange(this, AttributeComp->GetMaxHealth());
+}
+
 
 void ASUCharacter::PrimaryInteract() {
 	InteractionComp->PrimaryInteract();

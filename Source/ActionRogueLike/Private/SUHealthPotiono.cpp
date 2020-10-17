@@ -29,7 +29,7 @@ ASUHealthPotiono::ASUHealthPotiono()
 */
 void ASUHealthPotiono::Interact_Implementation(APawn* InstigatorPawn) {
 	USUAttributeComponent* AttributeComp = Cast<USUAttributeComponent>(InstigatorPawn->GetComponentByClass(USUAttributeComponent::StaticClass()));
-	if (Interactable && AttributeComp->ApplyHealthChange(HealAmount)) {
+	if (Interactable && AttributeComp->ApplyHealthChange(this, HealAmount)) {
 		Interactable = false;
 		MeshComp->SetVisibility(false);
 		SetActorEnableCollision(false);

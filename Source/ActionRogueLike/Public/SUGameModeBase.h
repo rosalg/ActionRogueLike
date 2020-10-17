@@ -48,4 +48,8 @@ public:
 	ASUGameModeBase();
 
 	virtual void StartPlay() override;
+
+	UFUNCTION(exec)
+	void KillAll();
+
 };

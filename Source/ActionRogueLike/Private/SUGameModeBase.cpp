@@ -21,13 +21,25 @@ void ASUGameModeBase::StartPlay() {
 	GetWorldTimerManager().SetTimer(TimerHandle_SpawnBots, this, &ASUGameModeBase::SpawnBotTimerElapsed, SpawnTimerInterval, true);
 }
 
+void ASUGameModeBase::KillAll()
+{
+	for (TActorIterator<ASUAICharacter> It(GetWorld()); It; ++It) {
+		ASUAICharacter* Bot = *It;
+
+		USUAttributeComponent* AttributeComp = USUAttributeComponent::GetAttributes(Bot);
+		if (AttributeComp) {
+			AttributeComp->Kill(this);
+		}
+	}
+}
+
 void ASUGameModeBase::SpawnBotTimerElapsed() {
 
 	int32 NumAliveBots = 0;
 	for (TActorIterator<ASUAICharacter> It(GetWorld()); It; ++It) {
 		ASUAICharacter* Bot = *It;
 
-		USUAttributeComponent* AttributeComp = Cast<USUAttributeComponent>(Bot->GetComponentByClass(USUAttributeComponent::StaticClass()));
+		USUAttributeComponent* AttributeComp = USUAttributeComponent::GetAttributes(Bot);
 		if (AttributeComp) {
 			NumAliveBots++;
 		}

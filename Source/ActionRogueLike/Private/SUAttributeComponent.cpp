@@ -3,6 +3,9 @@
 
 #include "SUAttributeComponent.h"
 #include "Math/UnrealMathUtility.h"
+#include <SUGameModeBase.h>
+
+static TAutoConsoleVariable<float> CVarDamageMultiplier(TEXT("su.DamageMultiplier"), 1.0f, TEXT("Global Damage Mod for Attri Comp"), ECVF_Cheat);
 
 // Sets default values for this component's properties
 USUAttributeComponent::USUAttributeComponent()
@@ -20,9 +23,23 @@ float USUAttributeComponent::GetCurrentHealth() {
 bool USUAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, float Delta) {
 	float OldHealth = Health;
 	Health += Delta;
+	if (Delta < 0.0f) {
+		float DamageMultiplier = CVarDamageMultiplier.GetValueOnGameThread();
+
+		Delta *= DamageMultiplier;
+	}
+
 	Health = FMath::Clamp(Health, 0.0f, MaxHealth);
-	if (OldHealth == Health) return false;
-	OnHealthChanged.Broadcast(InstigatorActor, this, Health, Health - OldHealth);
+	float ActualDelta = Health - OldHealth;
+	if (ActualDelta == 0) return false;
+	OnHealthChanged.Broadcast(InstigatorActor, this, Health, ActualDelta);
+
+	if (ActualDelta < 0.0f && Health == 0.0f) {
+		ASUGameModeBase* GM = GetWorld()->GetAuthGameMode<ASUGameModeBase>();
+		if (GM) {
+			GM->OnActorKilled(GetOwner(), InstigatorActor);
+		}
+	}
 
 	return true;
 }

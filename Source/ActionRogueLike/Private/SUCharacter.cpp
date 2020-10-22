@@ -12,11 +12,7 @@
 #include "SUAttributeComponent.h"
 #include "Particles/ParticleSystem.h"
 #include "Kismet/GameplayStatics.h"
-
-
-const int PRIMARY_PROJ_INDEX = 0;
-const int ULTIMATE_PROJ_INDEX = 1;
-const int TELEPORT_PROJ_INDEX = 2;
+#include "SUActionComponent.h"
 
 // Sets default values
 ASUCharacter::ASUCharacter()
@@ -34,13 +30,19 @@ ASUCharacter::ASUCharacter()
 	InteractionComp = CreateDefaultSubobject<USUInteractionComponent>("InteractionComp");
 	
 	AttributeComp = CreateDefaultSubobject<USUAttributeComponent>("AttributeComp");
-	AttributeComp->OnHealthChanged.AddDynamic(this, &ASUCharacter::OnHealthChanged);
+
+	ActionComp = CreateDefaultSubobject<USUActionComponent>("ActionComp");
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
 	bUseControllerRotationYaw = false;
 
 	
+}
+
+void ASUCharacter::PostInitializeComponents() {
+	Super::PostInitializeComponents();
+	AttributeComp->OnHealthChanged.AddDynamic(this, &ASUCharacter::OnHealthChanged);
 }
 
 // Called when the game starts or when spawned
@@ -55,6 +57,10 @@ void ASUCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+FVector ASUCharacter::GetPawnViewLocation() const {
+	return CameraComp->GetComponentLocation();
 }
 
 /*
@@ -73,6 +79,10 @@ void ASUCharacter::Tick(float DeltaTime)
 */
 void ASUCharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta) {
 	Cast<ACharacter>(this)->GetMesh()->SetScalarParameterValueOnMaterials("TimeToHit", GetWorld()->TimeSeconds);
+	if (NewHealth <= 0.0f && Delta < 0.0f) {
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		DisableInput(PC);
+	}
 }
 
 void ASUCharacter::MoveForward(float Value) {
@@ -94,80 +104,34 @@ void ASUCharacter::MoveRight(float Value) {
 	AddMovementInput(RightVector, Value);
 }
 
-void ASUCharacter::PrimaryAttack(int ProjectileNum) {
-	PlayAnimMontage(AttackAnim);
-
-	FTimerDelegate TimerDel;
-
-	TimerDel.BindUFunction(this, FName("PrimaryAttack_TimeElapsed"), ProjectileNum);
-
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, TimerDel, 0.2f, false);
-
+void ASUCharacter::SprintStart()
+{
+	ActionComp->StartActionByName(this, "Sprint");
 }
 
-void ASUCharacter::PrimaryAttack_TimeElapsed(int ProjectileNum) {
-	FVector handLocation = GetMesh()->GetSocketLocation("Muzzle_01");
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, handLocation, GetActorRotation());
-	FCollisionObjectQueryParams ObjectQueryParams;
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
-	// Set up raycast, lining up shot with camera and hand rather than directly from where our character is facing.
-	FVector start = CameraComp->GetComponentLocation();
-	FVector end = start + (CameraComp->GetForwardVector() * 100000);
-	FHitResult Hit;
-	GetWorld()->LineTraceSingleByObjectType(Hit, start, end, ObjectQueryParams);
-	FRotator bulletDirection;
-	if (Hit.bBlockingHit) {
-		bulletDirection = UKismetMathLibrary::FindLookAtRotation(handLocation, Hit.ImpactPoint);
-	}
-	else {
-		bulletDirection = UKismetMathLibrary::FindLookAtRotation(handLocation, end);
-	}
-	FTransform SpawnTM = FTransform(bulletDirection, handLocation);
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnParams.Instigator = this;
-	// Determine which projectile to spawn based on input parameter
-	if (ProjectileNum == PRIMARY_PROJ_INDEX) {
-		GetWorld()->SpawnActor<AActor>(PrimaryProjectileClass, SpawnTM, SpawnParams);
-	}
-	else if (ProjectileNum == ULTIMATE_PROJ_INDEX) {
-		GetWorld()->SpawnActor<AActor>(UltimateProjectileClass, SpawnTM, SpawnParams);
-	}
-	else if (ProjectileNum == TELEPORT_PROJ_INDEX) {
-		ASUTeleportProjectile* tp_proj = GetWorld()->SpawnActor<ASUTeleportProjectile>(TeleportProjectileClass, SpawnTM, SpawnParams);
-		FTimerDelegate TeleportDurationExpiredDelegate;
-		TeleportDurationExpiredDelegate.BindUFunction(this, FName("TeleportDurationExpired"), tp_proj);
-		GetWorldTimerManager().SetTimer(TimerHandle_Teleport, TeleportDurationExpiredDelegate, 0.2f, false);
-	}
- 	
+void ASUCharacter::SprintStop()
+{
+	ActionComp->StopActionByName(this, "Sprint");
 }
 
-
-void ASUCharacter::TeleportDurationExpired(ASUTeleportProjectile* Bullet) {
-	Bullet->Detonate();
-	FTimerHandle DestroyTimerHandle;
-	FTimerDelegate DestroyDelegate;
-	DestroyDelegate.BindUFunction(this, FName("AnimationDurationExpired"), Bullet);
-	GetWorldTimerManager().SetTimer(DestroyTimerHandle, DestroyDelegate, 0.2f, false);
+void ASUCharacter::PrimaryAttack() {
+	ActionComp->StartActionByName(this, "PrimaryAttack");
 }
 
-
-void ASUCharacter::AnimationDurationExpired(ASUTeleportProjectile* Bullet) {
-	Bullet->Teleport();
+void ASUCharacter::BlackHoleAttack()
+{
+	ActionComp->StartActionByName(this, "BlackHoleAttack");
 }
 
-
-FTimerHandle* ASUCharacter::GetTeleportTimerHandle() {
-	return &TimerHandle_Teleport;
+void ASUCharacter::Teleport()
+{
+	ActionComp->StartActionByName(this, "Teleport");
 }
 
 void ASUCharacter::FullHeal()
 {
 	AttributeComp->ApplyHealthChange(this, AttributeComp->GetMaxHealth());
 }
-
 
 void ASUCharacter::PrimaryInteract() {
 	InteractionComp->PrimaryInteract();
@@ -184,10 +148,13 @@ void ASUCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 
-	PlayerInputComponent->BindAction<Attack>("PrimaryAttack", IE_Pressed, this, &ASUCharacter::PrimaryAttack, PRIMARY_PROJ_INDEX);
-	PlayerInputComponent->BindAction<Attack>("UltimateAttack", IE_Pressed, this, &ASUCharacter::PrimaryAttack, ULTIMATE_PROJ_INDEX);
-	PlayerInputComponent->BindAction<Attack>("Teleport", IE_Pressed, this, &ASUCharacter::PrimaryAttack, TELEPORT_PROJ_INDEX);
+	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASUCharacter::PrimaryAttack);
+	PlayerInputComponent->BindAction("UltimateAttack", IE_Pressed, this, &ASUCharacter::BlackHoleAttack);
+	PlayerInputComponent->BindAction("Teleport", IE_Pressed, this, &ASUCharacter::Teleport);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASUCharacter::PrimaryInteract);
+
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ASUCharacter::SprintStart);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ASUCharacter::SprintStop);
 }
 

@@ -13,39 +13,16 @@ class ASUTeleportProjectile;
 class UAnimMontage;
 class USUAttributeComponent;
 class UParticleSystem;
+class USUActionComponent;
 
 UCLASS()
 class ACTIONROGUELIKE_API ASUCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-protected:
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TSubclassOf<AActor> PrimaryProjectileClass;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TSubclassOf<AActor> UltimateProjectileClass;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TSubclassOf<AActor> TeleportProjectileClass;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	UAnimMontage* AttackAnim;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	UParticleSystem* MuzzleFlash;
-
-	FTimerHandle TimerHandle_PrimaryAttack;
-	FTimerHandle TimerHandle_Teleport;
-
-
-
 public:
 	// Sets default values for this character's properties
 	ASUCharacter();
-
-	FTimerHandle* GetTeleportTimerHandle();
 
 	UFUNCTION(exec)
 	void FullHeal();
@@ -64,23 +41,30 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	USUAttributeComponent* AttributeComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USUActionComponent* ActionComp;
+
 	void MoveForward(float Value);
 	void MoveRight(float Value);
-	void PrimaryAttack(int ProjectileNum);
-	DECLARE_DELEGATE_OneParam(Attack, int);
-	UFUNCTION()
-	void PrimaryAttack_TimeElapsed(int ProjectileNum);
+	/*
+	ACTIONS
+	*/
+	void SprintStart();
+	void SprintStop();
+	void PrimaryAttack();
+	void BlackHoleAttack();
+	void Teleport();
 	void PrimaryInteract();
-	UFUNCTION()
-	void TeleportDurationExpired(ASUTeleportProjectile* Bullet);
-	UFUNCTION()
-	void AnimationDurationExpired(ASUTeleportProjectile* Bullet);
 
 	UFUNCTION()
 	void OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void PostInitializeComponents() override;
+
+	virtual FVector GetPawnViewLocation() const override;
 
 public:	
 	// Called every frame

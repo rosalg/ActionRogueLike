@@ -30,6 +30,8 @@ protected:
 	UFUNCTION()
 	void OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	
+	UFUNCTION()
+	void MaxFlightTime_TimeElapsed();
 	
 public:
 	// Called every frame

@@ -3,6 +3,9 @@
 
 #include "SUInteractionComponent.h"
 #include <SUItemChest.h>
+#include <DrawDebugHelpers.h>
+
+static TAutoConsoleVariable<bool> CVarDebugDrawInteraction(TEXT("su.InteractionDebugDraw"), false, TEXT("Enable Debug Lines for Interact Comp"), ECVF_Cheat);
 
 // Sets default values for this component's properties
 USUInteractionComponent::USUInteractionComponent()
@@ -51,12 +54,16 @@ void USUInteractionComponent::PrimaryInteract() {
 
 	TArray<FHitResult> Hits;
 	FCollisionShape Shape;
-	Shape.SetSphere(30.0f);
+	float Radius = 30.0f;
+	Shape.SetSphere(Radius);
 
-	GetWorld()->SweepMultiByObjectType(Hits, EyeLocation, End, FQuat::Identity, ObjectQueryParams, Shape);
+	bool bBlockingHit = GetWorld()->SweepMultiByObjectType(Hits, EyeLocation, End, FQuat::Identity, ObjectQueryParams, Shape);
+
+	FColor LineColor = bBlockingHit ? FColor::Green : FColor::Red;
 
 	for (FHitResult Hit : Hits) {
 		AActor* HitActor = Hit.GetActor();
+		if (CVarDebugDrawInteraction.GetValueOnGameThread()) DrawDebugSphere(GetWorld(), Hit.ImpactPoint, Radius, 32, LineColor, false, 2.0f);
 		if (HitActor) {
 			if (HitActor->Implements<USUGameplayInterface>()) {
 				APawn* MyPawn = Cast<APawn>(GetOwner());
@@ -67,6 +74,6 @@ void USUInteractionComponent::PrimaryInteract() {
 			}
 		}
 	}
-
+	if (CVarDebugDrawInteraction.GetValueOnGameThread()) DrawDebugLine(GetWorld(), EyeLocation, End, LineColor, false, 2.0f, 0, 2.0f);
 	
 }

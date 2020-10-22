@@ -35,19 +35,26 @@ protected:
 
 	FTimerHandle TimerHandle_SpawnBots;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	int ValuePerKill;
+
 	UFUNCTION()
 	void SpawnBotTimerElapsed();
 
 	UFUNCTION()
 	void OnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus);
 
-
+	// We pass in controller because we want to respawn using the controller, not the ASU Character. The Character is as object possessed by the controller.
+	UFUNCTION()
+	void RespawnPlayerElapsed(AController* Controller);
 
 public:
 
 	ASUGameModeBase();
 
 	virtual void StartPlay() override;
+
+	virtual void OnActorKilled(AActor* VictimActor, AActor* KillerActor);
 
 	UFUNCTION(exec)
 	void KillAll();

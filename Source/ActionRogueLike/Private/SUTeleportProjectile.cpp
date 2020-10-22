@@ -17,6 +17,8 @@ ASUTeleportProjectile::ASUTeleportProjectile() {
 void ASUTeleportProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+	FTimerHandle Wait;
+	GetWorldTimerManager().SetTimer(Wait, this, &ASUTeleportProjectile::MaxFlightTime_TimeElapsed, 0.2f);
 }
 
 void ASUTeleportProjectile::Teleport() {
@@ -30,10 +32,11 @@ void ASUTeleportProjectile::Detonate() {
 
 void ASUTeleportProjectile::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
 	//STOP TIMER FROM RUNNING ANY FURTHER
-	ASUCharacter* PC = (ASUCharacter*)GetInstigator();
-	FTimerHandle* TempHandle = PC->GetTeleportTimerHandle();
-	GetWorldTimerManager().ClearTimer(*TempHandle);
-	//MovementComp->
+	Detonate();
+	GetWorldTimerManager().SetTimer(Delay, this, &ASUTeleportProjectile::Teleport, 0.2f);
+}
+void ASUTeleportProjectile::MaxFlightTime_TimeElapsed()
+{
 	Detonate();
 	GetWorldTimerManager().SetTimer(Delay, this, &ASUTeleportProjectile::Teleport, 0.2f);
 }

@@ -57,12 +57,15 @@ protected:
 	void PrimaryInteract();
 
 	UFUNCTION()
-	void OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta);
+	void OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta, float NewRage);
+
+	UFUNCTION()
+	void OnRageChange(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewRage, float Delta);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	virtual void PostInitializeComponents() override;
+	//virtual void PostInitializeComponents() override;
 
 	virtual FVector GetPawnViewLocation() const override;
 

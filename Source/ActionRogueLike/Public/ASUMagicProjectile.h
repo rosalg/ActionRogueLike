@@ -5,13 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "SUBaseProjectile.h"
+#include "GameplayTagContainer.h"
 #include "ASUMagicProjectile.generated.h"
 
-class USphereComponent;
-class UProjectileMovementComponent;
 class UParticleSystemComponent;
 class USoundCue;
 class UParticleSystem;
+class USUActionEffect;
 
 UCLASS()
 class ACTIONROGUELIKE_API AASUMagicProjectile : public ASUBaseProjectile
@@ -24,8 +24,14 @@ public:
 
 protected:
 
+	UPROPERTY(EditDefaultsOnly, Category = "Attack")
+	FGameplayTag ParryTag;
+
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	float Damage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Attack")
+	TSubclassOf<USUActionEffect> BurningActionClass;
 
 	UFUNCTION()
 	void OnActorOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -35,12 +41,5 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	UParticleSystem* ImpactParticle;
-
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 };

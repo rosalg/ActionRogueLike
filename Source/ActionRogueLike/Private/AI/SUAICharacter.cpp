@@ -10,6 +10,7 @@
 #include "SUWorldUserWidget.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "SUActionComponent.h"
 
 // Sets default values
 ASUAICharacter::ASUAICharacter()
@@ -20,6 +21,8 @@ ASUAICharacter::ASUAICharacter()
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Ignore);
 	GetMesh()->SetGenerateOverlapEvents(true);
+
+	ActionComp = CreateDefaultSubobject<USUActionComponent>("ActionComp");
 
 	TimeToHitParamName = "TimeToHit";
 }
@@ -42,7 +45,7 @@ void ASUAICharacter::SetTargetActor(AActor* NewTarget) {
 	}
 }
 
-void ASUAICharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta) {
+void ASUAICharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta, float NewRage) {
 	if (Delta < 0.0f) {
 
 		if (InstigatorActor != this) {

@@ -9,6 +9,8 @@
 #include "Particles/ParticleSystem.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "SUGameplayFunctionLibrary.h"
+#include <SUActionComponent.h>
+#include "SUActionEffect.h"
 
 // Sets default values
 AASUMagicProjectile::AASUMagicProjectile()
@@ -23,32 +25,30 @@ AASUMagicProjectile::AASUMagicProjectile()
 void AASUMagicProjectile::OnActorOverlap(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
 	AActor* inst = GetInstigator();
 	if (OtherActor && OtherActor != inst) {
-		/*USUAttributeComponent* AttributeComp = Cast<USUAttributeComponent>(OtherActor->GetComponentByClass(USUAttributeComponent::StaticClass()));
-		if (AttributeComp) {
-			AttributeComp->ApplyHealthChange(GetInstigator(), Damage);
+
+		USUActionComponent* ActionComp = Cast<USUActionComponent>(OtherActor->GetComponentByClass(USUActionComponent::StaticClass()));
+
+		/* If we are parrying, parry*/
+		if (ActionComp && ActionComp->ActiveGameplayTags.HasTag(ParryTag)) {
+			MovementComp->Velocity = -MovementComp->Velocity;
+
+			SetInstigator(Cast<APawn>(OtherActor));
+			return;
 		}
-		
-		*/
+
+
 		if (USUGameplayFunctionLibrary::ApplyDirectionalDamage(inst, OtherActor, Damage, SweepResult)) {
 			UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, GetActorLocation(), GetActorRotation());
+
+			if (ActionComp) {
+				ActionComp->AddAction(GetInstigator(),  BurningActionClass);
+			}
+
 			Destroy();
 		}
 	}
 }
 
 
-// Called when the game starts or when spawned
-void AASUMagicProjectile::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void AASUMagicProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
 

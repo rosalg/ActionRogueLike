@@ -37,19 +37,23 @@ ASUCharacter::ASUCharacter()
 
 	bUseControllerRotationYaw = false;
 
-	
-}
-
-void ASUCharacter::PostInitializeComponents() {
-	Super::PostInitializeComponents();
+	AttributeComp->OnRageChange.AddDynamic(this, &ASUCharacter::OnRageChange);
 	AttributeComp->OnHealthChanged.AddDynamic(this, &ASUCharacter::OnHealthChanged);
 }
+
+/*void ASUCharacter::PostInitializeComponents() {
+	Super::PostInitializeComponents();
+}*/
 
 // Called when the game starts or when spawned
 void ASUCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void ASUCharacter::OnRageChange(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewRage, float Delta) {
+	UE_LOG(LogTemp, Log, TEXT("Rage change with value %f"), Delta);
 }
 
 // Called every frame
@@ -77,7 +81,7 @@ FVector ASUCharacter::GetPawnViewLocation() const {
  * RETURN
  *		None
 */
-void ASUCharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta) {
+void ASUCharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta, float NewRage) {
 	Cast<ACharacter>(this)->GetMesh()->SetScalarParameterValueOnMaterials("TimeToHit", GetWorld()->TimeSeconds);
 	if (NewHealth <= 0.0f && Delta < 0.0f) {
 		APlayerController* PC = Cast<APlayerController>(GetController());

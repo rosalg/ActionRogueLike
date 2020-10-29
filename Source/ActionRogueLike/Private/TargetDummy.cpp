@@ -17,7 +17,7 @@ ATargetDummy::ATargetDummy()
 
 }
 
-void ATargetDummy::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float newHealth, float Delta) {
+void ATargetDummy::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta, float NewRage) {
 	MeshComp->SetScalarParameterValueOnMaterials("TimeToHit", GetWorld()->TimeSeconds);
 }
 

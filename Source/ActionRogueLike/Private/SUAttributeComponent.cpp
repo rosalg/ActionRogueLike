@@ -13,7 +13,8 @@ USUAttributeComponent::USUAttributeComponent()
 
 	Health = 100;
 	MaxHealth = 100;
-
+	Rage = 0;
+	MaxRage = 100;
 }
 
 float USUAttributeComponent::GetCurrentHealth() {
@@ -24,15 +25,14 @@ bool USUAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, float Del
 	float OldHealth = Health;
 	Health += Delta;
 	if (Delta < 0.0f) {
+		ApplyRageChange(InstigatorActor, -Delta * 2);
 		float DamageMultiplier = CVarDamageMultiplier.GetValueOnGameThread();
-
 		Delta *= DamageMultiplier;
 	}
-
 	Health = FMath::Clamp(Health, 0.0f, MaxHealth);
 	float ActualDelta = Health - OldHealth;
 	if (ActualDelta == 0) return false;
-	OnHealthChanged.Broadcast(InstigatorActor, this, Health, ActualDelta);
+	OnHealthChanged.Broadcast(InstigatorActor, this, Health, ActualDelta, Rage);
 
 	if (ActualDelta < 0.0f && Health == 0.0f) {
 		ASUGameModeBase* GM = GetWorld()->GetAuthGameMode<ASUGameModeBase>();
@@ -41,6 +41,17 @@ bool USUAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, float Del
 		}
 	}
 
+	return true;
+}
+
+bool USUAttributeComponent::ApplyRageChange(AActor* InstigatorActor, float Delta)
+{
+	float OldRage = Rage;
+	Rage += Delta;
+	Rage = FMath::Clamp(Rage, 0.0f, MaxRage);
+	float ActualDelta = Rage - OldRage;
+	if (ActualDelta == 0) return false;
+	OnRageChange.Broadcast(InstigatorActor, this, Rage, ActualDelta);
 	return true;
 }
 

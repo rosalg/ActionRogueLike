@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "SUInteractionComponent.generated.h"
 
+class USUWorldUserWidget;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ACTIONROGUELIKE_API USUInteractionComponent : public UActorComponent
@@ -21,8 +22,30 @@ public:
 	USUInteractionComponent();
 
 protected:
+
+	void FindBestInteractable();
+
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+	// UPROP makes it so Unreal will clear object when it gets destroyed
+	UPROPERTY()
+	AActor* FocusedActor;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Trace")
+	float TraceDistance;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Trace")
+	float TraceRadius;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Trace")
+	TEnumAsByte<ECollisionChannel> CollisionChannel;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<USUWorldUserWidget> DefaultWidgetClass;
+
+	UPROPERTY()
+	USUWorldUserWidget* DefaultWidgetInstance;
 
 public:	
 	// Called every frame

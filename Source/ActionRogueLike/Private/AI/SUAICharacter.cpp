@@ -25,6 +25,7 @@ ASUAICharacter::ASUAICharacter()
 	ActionComp = CreateDefaultSubobject<USUActionComponent>("ActionComp");
 
 	TimeToHitParamName = "TimeToHit";
+	TargetActorKey = "TargetActor";
 }
 
 void ASUAICharacter::PostInitializeComponents() {
@@ -34,18 +35,35 @@ void ASUAICharacter::PostInitializeComponents() {
 	AttributeComp->OnHealthChanged.AddDynamic(this, &ASUAICharacter::OnHealthChanged);
 }
 
+AActor* ASUAICharacter::GetTargetActor() const {
+	AAIController* AIC = Cast<AAIController>(GetController());
+	if (AIC) {
+		return Cast<AActor>(AIC->GetBlackboardComponent()->GetValueAsObject(TargetActorKey));
+	}
+	return nullptr;
+}
+
 void ASUAICharacter::OnPawnSeen(APawn* Pawn) {
-	SetTargetActor(Pawn);
+	if (GetTargetActor() != Pawn) {
+		SetTargetActor(Pawn);
+
+		USUWorldUserWidget* NewWidget = CreateWidget<USUWorldUserWidget>(GetWorld(), SpottedWidgetClass);
+		if (NewWidget) {
+			NewWidget->AttachedActor = this;
+
+			NewWidget->AddToViewport(10);
+		}
+	}
 }
 
 void ASUAICharacter::SetTargetActor(AActor* NewTarget) {
 	AAIController* AIC = Cast<AAIController>(GetController());
 	if (AIC) {
-		 AIC->GetBlackboardComponent()->SetValueAsObject("TargetActor", NewTarget);
+		 AIC->GetBlackboardComponent()->SetValueAsObject(TargetActorKey, NewTarget);
 	}
 }
 
-void ASUAICharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta, float NewRage) {
+void ASUAICharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta) {
 	if (Delta < 0.0f) {
 
 		if (InstigatorActor != this) {

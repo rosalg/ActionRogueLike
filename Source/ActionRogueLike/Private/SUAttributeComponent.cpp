@@ -4,6 +4,7 @@
 #include "SUAttributeComponent.h"
 #include "Math/UnrealMathUtility.h"
 #include <SUGameModeBase.h>
+#include "Net/UnrealNetwork.h"
 
 static TAutoConsoleVariable<float> CVarDamageMultiplier(TEXT("su.DamageMultiplier"), 1.0f, TEXT("Global Damage Mod for Attri Comp"), ECVF_Cheat);
 
@@ -15,24 +16,41 @@ USUAttributeComponent::USUAttributeComponent()
 	MaxHealth = 100;
 	Rage = 0;
 	MaxRage = 100;
+
+	SetIsReplicatedByDefault(true);
 }
 
 float USUAttributeComponent::GetCurrentHealth() {
 	return Health;
 }
 
+void USUAttributeComponent::MulticastHealthChanged_Implementation(AActor* InstigatorActor, float NewHealth, float Delta)
+{
+	OnHealthChanged.Broadcast(InstigatorActor, this, NewHealth, Delta);
+}
+
+void USUAttributeComponent::MulticastRageChanged_Implementation(AActor* InstigatorActor, float NewRage, float Delta)
+{
+	OnRageChange.Broadcast(InstigatorActor, this, NewRage, Delta);
+}
+
 bool USUAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, float Delta) {
 	float OldHealth = Health;
-	Health += Delta;
 	if (Delta < 0.0f) {
 		ApplyRageChange(InstigatorActor, -Delta * 2);
 		float DamageMultiplier = CVarDamageMultiplier.GetValueOnGameThread();
 		Delta *= DamageMultiplier;
 	}
+	Health += Delta;
 	Health = FMath::Clamp(Health, 0.0f, MaxHealth);
 	float ActualDelta = Health - OldHealth;
 	if (ActualDelta == 0) return false;
-	OnHealthChanged.Broadcast(InstigatorActor, this, Health, ActualDelta, Rage);
+
+	// We actually had a health change.
+	//OnHealthChanged.Broadcast(InstigatorActor, this, Health, ActualDelta);
+
+	// For Multiplayer
+	MulticastHealthChanged(InstigatorActor, Health, ActualDelta);
 
 	if (ActualDelta < 0.0f && Health == 0.0f) {
 		ASUGameModeBase* GM = GetWorld()->GetAuthGameMode<ASUGameModeBase>();
@@ -51,7 +69,9 @@ bool USUAttributeComponent::ApplyRageChange(AActor* InstigatorActor, float Delta
 	Rage = FMath::Clamp(Rage, 0.0f, MaxRage);
 	float ActualDelta = Rage - OldRage;
 	if (ActualDelta == 0) return false;
-	OnRageChange.Broadcast(InstigatorActor, this, Rage, ActualDelta);
+	//OnRageChange.Broadcast(InstigatorActor, this, Rage, ActualDelta);
+	// Multiplayer
+	MulticastRageChanged(InstigatorActor, Rage, Delta);
 	return true;
 }
 
@@ -78,4 +98,16 @@ float USUAttributeComponent::GetMaxHealth()
 
 bool USUAttributeComponent::Kill(AActor* InstigatorActor) {
 	return ApplyHealthChange(InstigatorActor, -MaxHealth);
+}
+
+void USUAttributeComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(USUAttributeComponent, Health);
+	DOREPLIFETIME(USUAttributeComponent, MaxHealth);
+	DOREPLIFETIME(USUAttributeComponent, Rage);
+	DOREPLIFETIME(USUAttributeComponent, MaxRage);
+
+	// This is just for optimization for bandwidth to minimize how much we need to send over.
+	// DOREPLIFETIME_CONDITION(USUAttributeComponent, HealthMax, COND_OwnerOnly);
 }

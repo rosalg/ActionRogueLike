@@ -3,22 +3,34 @@
 
 #include "SUActionComponent.h"
 #include "SAction.h"
+#include "../ActionRogueLike.h"
 #include "..\Public\SUActionComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/ActorChannel.h"
 
 USUActionComponent::USUActionComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
+	SetIsReplicatedByDefault(true);
 }
 
+void USUActionComponent::ServerStartAction_Implementation(AActor* Instigator, FName ActionName)
+{
+	StartActionByName(Instigator, ActionName);
+}
 
+// Being play gets called on everything (Server AND clients) but we want it to be server-only.
 void USUActionComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	for (TSubclassOf<USAction> ActionClass : DefaultActions) {
-		AddAction(GetOwner(), ActionClass);
+	// This check ensures it is only ran on the servers (since only the server has authority). 
+	if (GetOwner()->HasAuthority()) {
+		for (TSubclassOf<USAction> ActionClass : DefaultActions) {
+			AddAction(GetOwner(), ActionClass);
+		}
 	}
+	
 }
 
 
@@ -26,8 +38,19 @@ void USUActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FString DebugMsg = GetNameSafe(GetOwner()) + " : " + ActiveGameplayTags.ToStringSimple();
-	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, DebugMsg);
+	// FString DebugMsg = GetNameSafe(GetOwner()) + " : " + ActiveGameplayTags.ToStringSimple();
+	// GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::White, DebugMsg);
+
+	for (USAction* Action : Actions) {
+		FColor TextColor = Action->IsRunning() ? FColor::Blue : FColor::White;
+		FString ActionMsg = FString::Printf(TEXT("[%s] Action: %s : IsRunning: %s : Outer: %s"),
+			*GetNameSafe(GetOwner()),
+			*Action->ActionName.ToString(),
+			Action->IsRunning() ? TEXT("true") : TEXT("false"),
+			*GetNameSafe(Action->GetOuter())
+		);
+		LogOnScreen(this, ActionMsg, TextColor, 0.0f);
+	}
 }
 
 void USUActionComponent::AddAction(AActor* Instigator, TSubclassOf<USAction> ActionClass) {
@@ -35,8 +58,9 @@ void USUActionComponent::AddAction(AActor* Instigator, TSubclassOf<USAction> Act
 		return;
 	}
 
-	USAction* NewAction = NewObject<USAction>(this, ActionClass);
+	USAction* NewAction = NewObject<USAction>(GetOwner(), ActionClass);
 	if (ensure(NewAction)) {
+		NewAction->Initialize(this);
 		Actions.Add(NewAction);
 
 		if (NewAction->bAutoStart && ensure(NewAction->CanStart(Instigator))) {
@@ -62,6 +86,10 @@ bool USUActionComponent::StartActionByName(AActor* Instigator, FName ActionName)
 				continue;
 			}
 
+			// Is client?
+			if (!GetOwner()->HasAuthority())
+				ServerStartAction(Instigator, ActionName);
+
 			Action->StartAction(Instigator);
 			return true;
 		}
@@ -81,4 +109,23 @@ bool USUActionComponent::StopActionByName(AActor* Instigator, FName ActionName)
 		}
 	}
 	return false;
+}
+
+void USUActionComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(USUActionComponent, Actions);
+}
+
+bool USUActionComponent::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) {
+	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+
+	// Tells unreal we have an array of subobjects and we want to replicate them
+	for (USAction* Action : Actions) {
+		if (Action) {
+			WroteSomething |= Channel->ReplicateSubobject(Action, *Bunch, *RepFlags);
+		}
+	}
+
+	return WroteSomething;
 }

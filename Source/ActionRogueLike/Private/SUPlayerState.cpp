@@ -2,6 +2,8 @@
 
 
 #include "SUPlayerState.h"
+#include "Net/UnrealNetwork.h"
+
 
 ASUPlayerState::ASUPlayerState() {
 	NumCredits = 0;
@@ -13,10 +15,18 @@ ASUPlayerState::ASUPlayerState() {
 bool ASUPlayerState::UpdateCredits(AActor* CreditInstigator, int Delta)
 {
 	NumCredits += Delta;
-	UE_LOG(LogTemp, Log, TEXT("PlayerCharacter: %s now has %d credits"), *GetNameSafe(CreditInstigator), NumCredits);
 	return true;
 }
 
 int ASUPlayerState::GetNumCredits() {
 	return NumCredits;
+}
+
+void ASUPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASUPlayerState, NumCredits);
+
+	// This is just for optimization for bandwidth to minimize how much we need to send over.
+	// DOREPLIFETIME_CONDITION(USUAttributeComponent, HealthMax, COND_OwnerOnly);
 }

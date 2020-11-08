@@ -10,7 +10,7 @@
 class UEnvQuery;
 class UEnvQueryInstanceBlueprintWrapper;
 class UCurveFloat;
-
+class ASUPickUpBase;
 
 /**
  * 
@@ -30,8 +30,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	UEnvQuery* SpawnBotQuery;
 
+	UPROPERTY(EditDefaultsOnly, Category = "PickUps")
+	UEnvQuery* SpawnPickUpsQuery;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	bool ShouldSpawn;
+
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	UCurveFloat* DifficultyCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PickUps")
+	TMap<TSubclassOf<ASUPickUpBase>, int> PickUpClasses;
 
 	FTimerHandle TimerHandle_SpawnBots;
 
@@ -44,9 +53,13 @@ protected:
 	UFUNCTION()
 	void OnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus);
 
+	UFUNCTION()
+	void OnQueryCompletedPickUps(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus);
+
 	// We pass in controller because we want to respawn using the controller, not the ASU Character. The Character is as object possessed by the controller.
 	UFUNCTION()
 	void RespawnPlayerElapsed(AController* Controller);
+
 
 public:
 

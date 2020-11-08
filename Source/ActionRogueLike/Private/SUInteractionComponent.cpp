@@ -31,12 +31,18 @@ void USUInteractionComponent::BeginPlay()
 	
 }
 
+
+
 // Called every frame
 void USUInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FindBestInteractable();
+	APawn* MyPawn = Cast<APawn>(GetOwner());
+	if (MyPawn->IsLocallyControlled()) {
+		FindBestInteractable();
+	}
+
 }
 
 void USUInteractionComponent::FindBestInteractable()
@@ -101,13 +107,20 @@ void USUInteractionComponent::FindBestInteractable()
 	if (CVarDebugDrawInteraction.GetValueOnGameThread()) DrawDebugLine(GetWorld(), EyeLocation, End, LineColor, false, 2.0f, 0, 2.0f);
 }
 
+// Focused actor is what I, the client or server know as the thing in focus.
+// Server Interact says server, interact with the object passed in. 
 void USUInteractionComponent::PrimaryInteract() {
-	if (FocusedActor == nullptr) {
+	ServerInteract(FocusedActor);
+}
+
+void USUInteractionComponent::ServerInteract_Implementation(AActor* InFocus)
+{
+	if (InFocus == nullptr) {
 		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "No Focus Actor to interact.");
 		return;
 	}
 
 	APawn* MyPawn = Cast<APawn>(GetOwner());
-	
-	ISUGameplayInterface::Execute_Interact(FocusedActor, MyPawn);
+
+	ISUGameplayInterface::Execute_Interact(InFocus, MyPawn);
 }

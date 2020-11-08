@@ -35,16 +35,15 @@ void ASUHealthPotion::Tick(float DeltaTime)
 *	None
 */
 void ASUHealthPotion::Interact_Implementation(APawn* InstigatorPawn) {
-	UE_LOG(LogTemp, Log, TEXT("Healing %s"), *GetNameSafe(InstigatorPawn));
 	ASUPlayerState* State = Cast<ASUPlayerState>(InstigatorPawn->GetPlayerState());
 	USUAttributeComponent* AttributeComp = Cast<USUAttributeComponent>(InstigatorPawn->GetComponentByClass(USUAttributeComponent::StaticClass()));
-	UE_LOG(LogTemp, Log, TEXT("Interactable: %d, Num Credits: %d"), Interactable, State->GetNumCredits());
-	if (Interactable && State->GetNumCredits() >= CreditCost && AttributeComp->ApplyHealthChange(this, HealAmount)) {
-		Interactable = false;
-		MeshComp->SetVisibility(false);
-		SetActorEnableCollision(false);
-		GetWorldTimerManager().SetTimer(Cooldown_TimerHandle, this, &ASUPickUpBase::Reset_Interactability, InteractionCooldown);
+	if (State->GetNumCredits() >= CreditCost && AttributeComp->ApplyHealthChange(this, HealAmount)) {
+		bInteractable = false;
+		OnRep_PickUpStateChange();
+
 		State->UpdateCredits(InstigatorPawn, -CreditCost);
+
+		GetWorldTimerManager().SetTimer(Cooldown_TimerHandle, this, &ASUPickUpBase::Reset_Interactability, InteractionCooldown);
 	}
 }
 

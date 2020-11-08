@@ -29,13 +29,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* LidMesh;
 
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	// Replicated: sync between client and server
+	UPROPERTY(ReplicatedUsing="OnRep_LidOpened")// RepNotify
+	bool bLidOpened;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UFUNCTION()
+	void OnRep_LidOpened();
 
+public:
 	// Sets default values for this actor's properties
 	ASUItemChest();
 };

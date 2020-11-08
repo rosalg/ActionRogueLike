@@ -12,20 +12,23 @@ USUActionEffect_Thorns::USUActionEffect_Thorns() {
 	ThornsMod = 0.5;
 }
 
-void USUActionEffect_Thorns::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta, float NewRage)
+void USUActionEffect_Thorns::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta)
 {
 	USUAttributeComponent* DamageDealerAttributeComp = USUAttributeComponent::GetAttributes(InstigatorActor);
 	AActor* ThornsOwner = GetOwningComponent()->GetOwner();
 	// If the thorns owner isn't the same person dealing the damage
-	if (ThornsOwner != InstigatorActor) {
+	if (ThornsOwner != InstigatorActor && Delta < 0.0f) {
+		int32 ReflectedAmount = FMath::RoundToInt(Delta * ThornsMod);
+		
+		if (ReflectedAmount == 0) return;
+
 		//Reflect damage
-		USUGameplayFunctionLibrary::ApplyDamage(ThornsOwner, InstigatorActor, -Delta * ThornsMod);
+		USUGameplayFunctionLibrary::ApplyDamage(ThornsOwner, InstigatorActor, -Delta * ReflectedAmount);
 	}
 }
 
 void USUActionEffect_Thorns::StartAction_Implementation(AActor* Instigator) {
 	Super::StartAction_Implementation(Instigator);
-	UE_LOG(LogTemp, Log, TEXT("Binding!"));
 	USUAttributeComponent::GetAttributes(Instigator)->OnHealthChanged.AddDynamic(this, &USUActionEffect_Thorns::OnHealthChanged);
 }
 

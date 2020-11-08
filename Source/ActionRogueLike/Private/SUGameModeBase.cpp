@@ -12,16 +12,28 @@
 #include <SUCharacter.h>
 #include "GameFramework/PlayerState.h"
 #include "SUPlayerState.h"
+#include "SUPickUpBase.h"
+#include "Kismet/KismetArrayLibrary.h"
+
+
 
 static TAutoConsoleVariable<bool> CVarSpawnBots(TEXT("su.SpawnBots"), true, TEXT("Enable spawning of bots via timer."), ECVF_Cheat);
 
 ASUGameModeBase::ASUGameModeBase() {
 	SpawnTimerInterval = 2.0f;
 	ValuePerKill = 1;
+	ShouldSpawn = false;
 }
 
 void ASUGameModeBase::StartPlay() {
 	Super::StartPlay();
+
+	
+	UEnvQueryInstanceBlueprintWrapper* QueryInstance = UEnvQueryManager::RunEQSQuery(this, SpawnPickUpsQuery, this, EEnvQueryRunMode::AllMatching, nullptr);
+	if (ensure(QueryInstance)) {
+		UE_LOG(LogTemp, Log, TEXT("Succeeded query, now entering OnQueryCompletedPickups"));
+		QueryInstance->GetOnQueryFinishedEvent().AddDynamic(this, &ASUGameModeBase::OnQueryCompletedPickUps);
+	}
 	
 
 	GetWorldTimerManager().SetTimer(TimerHandle_SpawnBots, this, &ASUGameModeBase::SpawnBotTimerElapsed, SpawnTimerInterval, true);
@@ -41,7 +53,7 @@ void ASUGameModeBase::KillAll()
 
 void ASUGameModeBase::SpawnBotTimerElapsed() {
 	if (!CVarSpawnBots.GetValueOnGameThread()) {
-		UE_LOG(LogTemp, Warning, TEXT("Bot spawning disabled."));
+		// UE_LOG(LogTemp, Warning, TEXT("Bot spawning disabled."));
 		return;
 	}
 	int32 NumAliveBots = 0;
@@ -70,7 +82,7 @@ void ASUGameModeBase::SpawnBotTimerElapsed() {
 }
 
 void ASUGameModeBase::OnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus) {
-	if (QueryStatus != EEnvQueryStatus::Success) {
+	if (QueryStatus != EEnvQueryStatus::Success || !ShouldSpawn) {
 		return;
 	}
 	
@@ -79,6 +91,39 @@ void ASUGameModeBase::OnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryI
 	if (Locations.Num() > 0) {
 		GetWorld()->SpawnActor<AActor>(MinionClass, Locations[0], FRotator::ZeroRotator);
 	}
+}
+
+void ASUGameModeBase::OnQueryCompletedPickUps(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus)
+{
+	if (QueryStatus != EEnvQueryStatus::Success) {
+		return;
+	}
+
+	TArray<FVector> Locations = QueryInstance->GetResultsAsLocations();
+	TArray<int> LocationIndices;
+	for (int32 i = 0; i < Locations.Num() - 1; i++) {
+		LocationIndices.Push(i);
+	}
+
+	for (int i = 0; i < LocationIndices.Num(); i++) {
+		int32 Index = FMath::RandRange(i, LocationIndices.Num() - 1);
+		if (i != Index)
+		{
+			LocationIndices.Swap(i, Index);
+		}
+	}
+
+	int numTotalsSpawns = 0;
+	for (const TPair<TSubclassOf<ASUPickUpBase>, int>& pair : PickUpClasses) {
+		int CurrTotal = numTotalsSpawns;
+		for (int i = numTotalsSpawns; i < CurrTotal + pair.Value; i++) {
+			if (Locations.Num() > i) {
+				GetWorld()->SpawnActor<AActor>(pair.Key, Locations[LocationIndices[i]], FRotator::ZeroRotator);
+				numTotalsSpawns++;
+			}
+		}
+	}
+	
 }
 
 void ASUGameModeBase::RespawnPlayerElapsed(AController* Controller) {

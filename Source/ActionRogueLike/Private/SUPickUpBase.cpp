@@ -2,7 +2,7 @@
 
 
 #include "SUPickUpBase.h"
-
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ASUPickUpBase::ASUPickUpBase()
@@ -13,9 +13,11 @@ ASUPickUpBase::ASUPickUpBase()
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMesh"));
 	RootComponent = MeshComp;
 
-	Interactable = true;
+	bInteractable = true;
 	InteractionCooldown = 10.0f;
 	CreditCost = 1;
+
+	SetReplicates(true);
 }
 
 /*
@@ -24,9 +26,13 @@ ASUPickUpBase::ASUPickUpBase()
 * It will make it so the pick up can be used again.
 */
 void ASUPickUpBase::Reset_Interactability() {
-	Interactable = true;
-	MeshComp->SetVisibility(true);
-	SetActorEnableCollision(true);
+	bInteractable = true;
+	OnRep_PickUpStateChange();
+}
+
+void ASUPickUpBase::OnRep_PickUpStateChange() {
+	MeshComp->SetVisibility(bInteractable);
+	SetActorEnableCollision(bInteractable);
 }
 
 // Called when the game starts or when spawned
@@ -42,3 +48,10 @@ void ASUPickUpBase::Tick(float DeltaTime)
 
 }
 
+
+void ASUPickUpBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// When bLidOpened has changed, send it to all clients.
+	DOREPLIFETIME(ASUPickUpBase, bInteractable);
+}

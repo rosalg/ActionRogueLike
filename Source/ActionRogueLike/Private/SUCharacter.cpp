@@ -14,6 +14,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "SUActionComponent.h"
 
+
 // Sets default values
 ASUCharacter::ASUCharacter()
 {
@@ -52,9 +53,7 @@ void ASUCharacter::BeginPlay()
 	
 }
 
-void ASUCharacter::OnRageChange(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewRage, float Delta) {
-	UE_LOG(LogTemp, Log, TEXT("Rage change with value %f"), Delta);
-}
+
 
 // Called every frame
 void ASUCharacter::Tick(float DeltaTime)
@@ -65,28 +64,6 @@ void ASUCharacter::Tick(float DeltaTime)
 
 FVector ASUCharacter::GetPawnViewLocation() const {
 	return CameraComp->GetComponentLocation();
-}
-
-/*
- * This function is listening to the event OnHealthChanged this is a part of our AttributeComponent. 
- * 
- * When invoked (check damaging or healing script (i.e. ASUMagicProjectile) to see broadcast), it will update the TimeToHit parameter on
- * its static mesh component.
- * 
- * PARAMETERS
- *		AActor* InstigatorActor - Actor that caused the healing or damage
- *		USUAttributeComponent* OwningComp - Component that this event belongs to
- *		float NewHealth - Health post change
- *		float Delta - The amount health changed
- * RETURN
- *		None
-*/
-void ASUCharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta, float NewRage) {
-	Cast<ACharacter>(this)->GetMesh()->SetScalarParameterValueOnMaterials("TimeToHit", GetWorld()->TimeSeconds);
-	if (NewHealth <= 0.0f && Delta < 0.0f) {
-		APlayerController* PC = Cast<APlayerController>(GetController());
-		DisableInput(PC);
-	}
 }
 
 void ASUCharacter::MoveForward(float Value) {
@@ -132,11 +109,6 @@ void ASUCharacter::Teleport()
 	ActionComp->StartActionByName(this, "Teleport");
 }
 
-void ASUCharacter::FullHeal()
-{
-	AttributeComp->ApplyHealthChange(this, AttributeComp->GetMaxHealth());
-}
-
 void ASUCharacter::PrimaryInteract() {
 	InteractionComp->PrimaryInteract();
 }
@@ -162,3 +134,47 @@ void ASUCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ASUCharacter::SprintStop);
 }
 
+/*----------------------------------------------------------
+Events
+------------------------------------------------------------*/
+void ASUCharacter::OnRageChange(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewRage, float Delta) {
+	UE_LOG(LogTemp, Log, TEXT("Rage change with value %f"), Delta);
+}
+
+
+/*
+ * This function is listening to the event OnHealthChanged this is a part of our AttributeComponent.
+ *
+ * When invoked (check damaging or healing script (i.e. ASUMagicProjectile) to see broadcast), it will update the TimeToHit parameter on
+ * its static mesh component.
+ *
+ * PARAMETERS
+ *		AActor* InstigatorActor - Actor that caused the healing or damage
+ *		USUAttributeComponent* OwningComp - Component that this event belongs to
+ *		float NewHealth - Health post change
+ *		float Delta - The amount health changed
+ * RETURN
+ *		None
+*/
+void ASUCharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta) {
+	Cast<ACharacter>(this)->GetMesh()->SetScalarParameterValueOnMaterials("TimeToHit", GetWorld()->TimeSeconds);
+	if (NewHealth <= 0.0f && Delta < 0.0f) {
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		DisableInput(PC);
+	}
+}
+
+/*----------------------------------------------------------
+Console Commands
+------------------------------------------------------------*/
+static TAutoConsoleVariable<float> CVarCurrHealthChange(TEXT("su.PlayerCurrentHealthChange"), 0.0f, TEXT("Deal X amount of damage to player."), ECVF_Cheat);
+
+void ASUCharacter::FullHeal()
+{
+	AttributeComp->ApplyHealthChange(this, AttributeComp->GetMaxHealth());
+}
+
+void ASUCharacter::ChangePlayerHealth()
+{
+	AttributeComp->ApplyHealthChange(this, CVarCurrHealthChange.GetValueOnGameThread());
+}

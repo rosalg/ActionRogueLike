@@ -20,6 +20,10 @@ class ACTIONROGUELIKE_API USAction : public UObject
 	
 protected:
 
+	// Replicated because our server needs to know all clients action comps
+	UPROPERTY(Replicated)
+	USUActionComponent* ActionComp;
+
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	USUActionComponent* GetOwningComponent() const;
 
@@ -31,9 +35,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Tags")
 	FGameplayTagContainer BlockedTags;
 
+	UPROPERTY(ReplicatedUsing="OnRep_IsRunning")
 	bool bIsRunning;
 
+	UFUNCTION()
+	void OnRep_IsRunning();
+
 public:
+
+	void Initialize(USUActionComponent* NewActionComp);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
 	bool bAutoStart;
@@ -55,5 +65,8 @@ public:
 	void StopAction(AActor* Instigator);
 
 	UWorld* GetWorld() const override;
+
+	// When deriving from UObjects, you need to override this to make it networking compatible and say that it is supported for networking.
+	bool IsSupportedForNetworking() const override { return true; }
 
 };

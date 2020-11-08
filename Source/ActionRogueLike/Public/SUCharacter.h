@@ -27,6 +27,9 @@ public:
 	UFUNCTION(exec)
 	void FullHeal();
 
+	UFUNCTION(exec)
+	void ChangePlayerHealth();
+
 protected:
 
 	UPROPERTY(VisibleAnywhere);
@@ -57,7 +60,7 @@ protected:
 	void PrimaryInteract();
 
 	UFUNCTION()
-	void OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta, float NewRage);
+	void OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta);
 
 	UFUNCTION()
 	void OnRageChange(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewRage, float Delta);

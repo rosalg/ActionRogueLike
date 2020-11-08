@@ -19,7 +19,7 @@ public:
 	USUActionEffect_Thorns();
 
 	UFUNCTION()
-	void OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta, float NewRage);
+	void OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta);
 
 	void StartAction_Implementation(AActor* Instigator) override;
 

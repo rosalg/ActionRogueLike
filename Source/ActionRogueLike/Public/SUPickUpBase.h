@@ -17,8 +17,6 @@ public:
 	UFUNCTION()
 	void Reset_Interactability();
 
-	bool Interactable;
-
 protected:
 
 	UPROPERTY(VisibleAnywhere)
@@ -34,6 +32,12 @@ protected:
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void OnRep_PickUpStateChange();
+
+	UPROPERTY(ReplicatedUsing = "OnRep_PickUpStateChange")
+	bool bInteractable;
 
 public:
 	// Called every frame

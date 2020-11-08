@@ -30,7 +30,7 @@ ASUBaseProjectile::ASUBaseProjectile()
 	AudioCompInAir = CreateDefaultSubobject<UAudioComponent>("AudioCompInAir");
 	AudioCompInAir->SetupAttachment(SphereComp);
 
-
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned

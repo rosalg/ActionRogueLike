@@ -47,6 +47,12 @@ protected:
 	UPROPERTY()
 	USUWorldUserWidget* DefaultWidgetInstance;
 
+// SERVER RELATED ONES!
+protected:
+
+	UFUNCTION(Server, Reliable)
+	void ServerInteract(AActor* InFocus);
+
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

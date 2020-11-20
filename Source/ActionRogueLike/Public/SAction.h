@@ -9,6 +9,18 @@
 
 class UWorld;
 
+USTRUCT()
+struct FActionRepData {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	bool bIsRunning;
+
+	UPROPERTY()
+	AActor* Instigator;
+};
+
 
 /**
  * 
@@ -19,6 +31,9 @@ class ACTIONROGUELIKE_API USAction : public UObject
 	GENERATED_BODY()
 	
 protected:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	UTexture2D* Icon;
 
 	// Replicated because our server needs to know all clients action comps
 	UPROPERTY(Replicated)
@@ -35,15 +50,29 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Tags")
 	FGameplayTagContainer BlockedTags;
 
-	UPROPERTY(ReplicatedUsing="OnRep_IsRunning")
-	bool bIsRunning;
+	UPROPERTY(ReplicatedUsing = "OnRep_RepData")
+	FActionRepData RepData;
+	//bool bIsRunning;
 
 	UFUNCTION()
-	void OnRep_IsRunning();
+	void OnRep_RepData();
+	
+	UPROPERTY(Replicated)
+	float TimeStarted;
+
 
 public:
 
 	void Initialize(USUActionComponent* NewActionComp);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Action")
+	float Cost;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Action")
+	TMap<FGameplayTag, TSubclassOf<USAction>> UnlockedTagsOnPurchase;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Action")
+	FGameplayTagContainer Prerequisites;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
 	bool bAutoStart;
@@ -63,6 +92,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Action")
 	void StopAction(AActor* Instigator);
+
+
 
 	UWorld* GetWorld() const override;
 

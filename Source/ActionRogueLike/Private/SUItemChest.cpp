@@ -4,6 +4,7 @@
 #include "SUItemChest.h"
 #include "Components/StaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "..\Public\SUItemChest.h"
 
 
 // Sets default values
@@ -25,6 +26,11 @@ void ASUItemChest::Interact_Implementation(APawn* InstigatorPawn) {
 
 	bLidOpened = !bLidOpened;
 	// Need to manually call to server
+	OnRep_LidOpened();
+}
+
+void ASUItemChest::OnActorLoaded_Implementation()
+{
 	OnRep_LidOpened();
 }
 

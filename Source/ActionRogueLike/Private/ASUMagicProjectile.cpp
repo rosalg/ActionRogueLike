@@ -11,6 +11,7 @@
 #include "SUGameplayFunctionLibrary.h"
 #include <SUActionComponent.h>
 #include "SUActionEffect.h"
+#include "SUAttributeComponent.h"
 
 // Sets default values
 AASUMagicProjectile::AASUMagicProjectile()
@@ -36,14 +37,16 @@ void AASUMagicProjectile::OnActorOverlap(UPrimitiveComponent* HitComp, AActor* O
 			return;
 		}
 
-
+		USUAttributeComponent* AttributeComp = USUAttributeComponent::GetAttributes(inst);
 		if (USUGameplayFunctionLibrary::ApplyDirectionalDamage(inst, OtherActor, Damage, SweepResult)) {
 			UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, GetActorLocation(), GetActorRotation());
-
-			if (ActionComp) {
-				ActionComp->AddAction(GetInstigator(),  BurningActionClass);
+			if (AttributeComp) {
+				if (ActionComp && HasAuthority() && AttributeComp->bProjectileCanBurn) {
+					ActionComp->AddAction(GetInstigator(), BurningActionClass);
+				}
 			}
+			
 
 			Destroy();
 		}

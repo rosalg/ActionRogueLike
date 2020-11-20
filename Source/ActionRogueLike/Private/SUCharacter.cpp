@@ -13,6 +13,7 @@
 #include "Particles/ParticleSystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "SUActionComponent.h"
+#include "SUPlayerState.h"
 
 
 // Sets default values
@@ -40,6 +41,9 @@ ASUCharacter::ASUCharacter()
 
 	AttributeComp->OnRageChange.AddDynamic(this, &ASUCharacter::OnRageChange);
 	AttributeComp->OnHealthChanged.AddDynamic(this, &ASUCharacter::OnHealthChanged);
+
+	
+
 }
 
 /*void ASUCharacter::PostInitializeComponents() {
@@ -50,7 +54,7 @@ ASUCharacter::ASUCharacter()
 void ASUCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	UE_LOG(LogTemp, Log, TEXT("Starting begin play"));
 }
 
 
@@ -59,7 +63,6 @@ void ASUCharacter::BeginPlay()
 void ASUCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 FVector ASUCharacter::GetPawnViewLocation() const {
@@ -113,6 +116,12 @@ void ASUCharacter::PrimaryInteract() {
 	InteractionComp->PrimaryInteract();
 }
 
+void ASUCharacter::JumpChar() {
+	if (AttributeComp->bCanJump) {
+		ACharacter::Jump();
+	}
+}
+
 // Called to bind functionality to input
 void ASUCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -127,7 +136,7 @@ void ASUCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASUCharacter::PrimaryAttack);
 	PlayerInputComponent->BindAction("UltimateAttack", IE_Pressed, this, &ASUCharacter::BlackHoleAttack);
 	PlayerInputComponent->BindAction("Teleport", IE_Pressed, this, &ASUCharacter::Teleport);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ASUCharacter::JumpChar);
 	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASUCharacter::PrimaryInteract);
 
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ASUCharacter::SprintStart);
@@ -161,20 +170,22 @@ void ASUCharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponen
 	if (NewHealth <= 0.0f && Delta < 0.0f) {
 		APlayerController* PC = Cast<APlayerController>(GetController());
 		DisableInput(PC);
+
+		SetLifeSpan(5.0f);
 	}
 }
 
 /*----------------------------------------------------------
 Console Commands
 ------------------------------------------------------------*/
-static TAutoConsoleVariable<float> CVarCurrHealthChange(TEXT("su.PlayerCurrentHealthChange"), 0.0f, TEXT("Deal X amount of damage to player."), ECVF_Cheat);
+static TAutoConsoleVariable<float> CVarCurrHealthChange(TEXT("su.PlayerCurrentHealthChange"), 1.0f, TEXT("Deal X amount of damage to player."), ECVF_Cheat);
 
 void ASUCharacter::FullHeal()
 {
 	AttributeComp->ApplyHealthChange(this, AttributeComp->GetMaxHealth());
 }
 
-void ASUCharacter::ChangePlayerHealth()
+void ASUCharacter::KillPlayer()
 {
-	AttributeComp->ApplyHealthChange(this, CVarCurrHealthChange.GetValueOnGameThread());
+	AttributeComp->ApplyHealthChange(this, -AttributeComp->GetMaxHealth());
 }

@@ -3,7 +3,21 @@
 
 #include "SUPlayerState.h"
 #include "Net/UnrealNetwork.h"
+#include "SUSaveGame.h"
+#include "SAction.h"
 
+void ASUPlayerState::AddTagsToUnlocked(TMap<FGameplayTag, TSubclassOf<USAction>> ToAdd)
+{
+	UnlockedAbilities.Append(ToAdd);
+}
+
+FGameplayTagContainer ASUPlayerState::GetUnlockedTags() {
+	FGameplayTagContainer output;
+	for (auto curr : UnlockedAbilities) {
+		output.AddTag(curr.Key);
+	}
+	return output;
+}
 
 ASUPlayerState::ASUPlayerState() {
 	NumCredits = 0;
@@ -29,4 +43,19 @@ void ASUPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	// This is just for optimization for bandwidth to minimize how much we need to send over.
 	// DOREPLIFETIME_CONDITION(USUAttributeComponent, HealthMax, COND_OwnerOnly);
+}
+
+
+void ASUPlayerState::SavePlayerState_Implementation(USUSaveGame* SaveObject) {
+	if (SaveObject) {
+		SaveObject->Credits = NumCredits;
+	}
+}
+
+
+
+void ASUPlayerState::LoadPlayerState_Implementation(USUSaveGame* SaveObject) {
+	if (SaveObject) {
+		NumCredits = SaveObject->Credits;
+	}
 }

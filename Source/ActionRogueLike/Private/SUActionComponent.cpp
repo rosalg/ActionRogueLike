@@ -15,6 +15,11 @@ USUActionComponent::USUActionComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void USUActionComponent::ServerStopAction_Implementation(AActor* Instigator, FName ActionName)
+{
+	StopActionByName(Instigator, ActionName);
+}
+
 void USUActionComponent::ServerStartAction_Implementation(AActor* Instigator, FName ActionName)
 {
 	StartActionByName(Instigator, ActionName);
@@ -43,18 +48,18 @@ void USUActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	for (USAction* Action : Actions) {
 		FColor TextColor = Action->IsRunning() ? FColor::Blue : FColor::White;
-		FString ActionMsg = FString::Printf(TEXT("[%s] Action: %s : IsRunning: %s : Outer: %s"),
-			*GetNameSafe(GetOwner()),
-			*Action->ActionName.ToString(),
-			Action->IsRunning() ? TEXT("true") : TEXT("false"),
-			*GetNameSafe(Action->GetOuter())
-		);
+		FString ActionMsg = FString::Printf(TEXT("[%s] Action: %s"), *GetNameSafe(GetOwner()), *GetNameSafe(Action));
 		LogOnScreen(this, ActionMsg, TextColor, 0.0f);
 	}
 }
 
 void USUActionComponent::AddAction(AActor* Instigator, TSubclassOf<USAction> ActionClass) {
 	if (!ensure(ActionClass)) {
+		return;
+	}
+
+	if (!GetOwner()->HasAuthority()) {
+		UE_LOG(LogTemp, Warning, TEXT("Client attemping to AddAction. [Class: %s]"), *GetNameSafe(ActionClass));
 		return;
 	}
 
@@ -103,6 +108,10 @@ bool USUActionComponent::StopActionByName(AActor* Instigator, FName ActionName)
 		if (Action && Action->ActionName == ActionName) {
 
 			if (Action->IsRunning()) {
+
+				if (!GetOwner()->HasAuthority())
+					ServerStopAction(Instigator, ActionName);
+
 				Action->StopAction(Instigator);
 				return true;
 			}

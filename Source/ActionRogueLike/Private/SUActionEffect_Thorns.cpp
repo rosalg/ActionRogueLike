@@ -5,6 +5,7 @@
 #include "SUGameplayFunctionLibrary.h"
 #include "SUAttributeComponent.h"
 #include "SUActionComponent.h"
+#include "SUCharacter.h"
 
 USUActionEffect_Thorns::USUActionEffect_Thorns() {
 	Duration = 0;
@@ -16,15 +17,18 @@ void USUActionEffect_Thorns::OnHealthChanged(AActor* InstigatorActor, USUAttribu
 {
 	USUAttributeComponent* DamageDealerAttributeComp = USUAttributeComponent::GetAttributes(InstigatorActor);
 	AActor* ThornsOwner = GetOwningComponent()->GetOwner();
+	USUAttributeComponent* DamageTakerAttributeComp = USUAttributeComponent::GetAttributes(ThornsOwner);
 	// If the thorns owner isn't the same person dealing the damage
-	if (ThornsOwner != InstigatorActor && Delta < 0.0f) {
-		int32 ReflectedAmount = FMath::RoundToInt(Delta * ThornsMod);
-		
-		if (ReflectedAmount == 0) return;
-
-		//Reflect damage
-		USUGameplayFunctionLibrary::ApplyDamage(ThornsOwner, InstigatorActor, -Delta * ReflectedAmount);
+	if (DamageTakerAttributeComp) {
+		if (DamageTakerAttributeComp->bCanReflect && ThornsOwner != InstigatorActor && Delta < 0.0f) {
+			int32 ReflectedAmount = FMath::Abs(FMath::RoundToInt(Delta * ThornsMod));
+			UE_LOG(LogTemp, Warning, TEXT("Checking... %d"), ReflectedAmount);
+			if (ReflectedAmount == 0) return;
+			//Reflect damage
+			USUGameplayFunctionLibrary::ApplyDamage(ThornsOwner, InstigatorActor, ReflectedAmount);
+		}
 	}
+	
 }
 
 void USUActionEffect_Thorns::StartAction_Implementation(AActor* Instigator) {

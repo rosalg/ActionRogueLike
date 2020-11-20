@@ -6,8 +6,10 @@
 
 bool USUGameplayFunctionLibrary::ApplyDamage(AActor* DamageCauser, AActor* TargetActor, float DamageAmount) {
 	USUAttributeComponent* AttributeComp = USUAttributeComponent::GetAttributes(TargetActor);
+	USUAttributeComponent* Causer = USUAttributeComponent::GetAttributes(DamageCauser);
 	if (AttributeComp) {
-		return AttributeComp->ApplyHealthChange(DamageCauser, -DamageAmount);
+		UE_LOG(LogTemp, Log, TEXT("AC DamMod: %f"), AttributeComp->GetCurrentDamageModifier())
+		return AttributeComp->ApplyHealthChange(DamageCauser, -DamageAmount - Causer->GetCurrentDamageModifier());
 	}
 	return false;
 }

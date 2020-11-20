@@ -4,7 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "GameplayTagContainer.h"
 #include "SUPlayerState.generated.h"
+
+class USUSaveGame;
+class USAction;
 
 /**
  * 
@@ -21,6 +25,21 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool UpdateCredits(AActor* CreditInstigator, int Delta);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void SavePlayerState(USUSaveGame* SaveObject);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void LoadPlayerState(USUSaveGame* SaveObject);
+
+	UFUNCTION(BlueprintCallable)
+	void AddTagsToUnlocked(TMap<FGameplayTag, TSubclassOf<USAction>> ToAdd);
+
+	UFUNCTION(BlueprintCallable)
+	FGameplayTagContainer GetUnlockedTags();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tags")
+	TMap<FGameplayTag, TSubclassOf<USAction>> UnlockedAbilities;
 
 	ASUPlayerState();
 

@@ -28,7 +28,7 @@ public:
 	void FullHeal();
 
 	UFUNCTION(exec)
-	void ChangePlayerHealth();
+	void KillPlayer();
 
 protected:
 
@@ -64,6 +64,9 @@ protected:
 
 	UFUNCTION()
 	void OnRageChange(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewRage, float Delta);
+
+	UFUNCTION()
+	void JumpChar();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

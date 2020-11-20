@@ -5,10 +5,12 @@
 #include "../ActionRogueLike.h"
 #include "SUActionComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "..\Public\SAction.h"
 
 
 void USAction::Initialize(USUActionComponent* NewActionComp)
 {
+	Cost = 0;
 	ActionComp = NewActionComp;
 }
 
@@ -22,7 +24,14 @@ void USAction::StartAction_Implementation(AActor* Instigator)
 	USUActionComponent* Comp = GetOwningComponent();
 	Comp->ActiveGameplayTags.AppendTags(GrantsTags);
 
-	bIsRunning = true;
+	RepData.bIsRunning = true;
+	RepData.Instigator = Instigator;
+
+	if (GetOwningComponent()->GetOwnerRole() == ROLE_Authority) {
+		TimeStarted = GetWorld()->TimeSeconds;
+	}
+
+	GetOwningComponent()->OnActionStarted.Broadcast(GetOwningComponent(), this);
 }
 
 
@@ -35,16 +44,20 @@ void USAction::StopAction_Implementation(AActor* Instigator)
 	USUActionComponent* Comp = GetOwningComponent();
 	Comp->ActiveGameplayTags.RemoveTags(GrantsTags);
 
-	bIsRunning = false;
+	RepData.bIsRunning = false;
+	RepData.Instigator = Instigator;
+
+	GetOwningComponent()->OnActionStopped.Broadcast(GetOwningComponent(), this);
 }
 
 
-void USAction::OnRep_IsRunning() {
-	if (bIsRunning) {
-		StartAction(nullptr);
+void USAction::OnRep_RepData() {
+	if (RepData.bIsRunning) {
+		StartAction(RepData.Instigator);
 	}
-	else {
-		StopAction(nullptr);
+	else 
+	{
+		StopAction(RepData.Instigator);
 	}
 }
 
@@ -53,7 +66,7 @@ void USAction::OnRep_IsRunning() {
 
 bool USAction::CanStart_Implementation(AActor* Instigator)
 {
-	if (IsRunning()) return false;
+	if (RepData.bIsRunning) return false;
 
 	USUActionComponent* Comp = GetOwningComponent();
 
@@ -83,14 +96,15 @@ USUActionComponent* USAction::GetOwningComponent() const {
 
 
 bool USAction::IsRunning() const {
-	return bIsRunning;
+	return RepData.bIsRunning;
 }
 
 
 void USAction::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(USAction, bIsRunning);
+	DOREPLIFETIME(USAction, RepData);
 	DOREPLIFETIME(USAction, ActionComp);
+	DOREPLIFETIME(USAction, TimeStarted);
 }
 

@@ -41,6 +41,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated, Category = "Attributes")
 	float MaxRage;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated, Category = "Attributes")
+	float DamageModifier;
+
+
 	// Should eventually change this to unreliable by doing
 	// UPROPERTY(ReplicatedUsing="")
 	// bool bIsAlive;
@@ -69,5 +73,33 @@ public:
 	float GetCurrentHealth();
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	float GetCurrentDamageModifier();
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	bool Kill(AActor* InstigatorActor);
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	bool ApplyMaxHealthChange(AActor* InstigatorActor, float Delta);
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	bool ApplyDamageModifierChange(AActor* InstigatorActor, float Delta);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated, Category = "Attributes")
+	bool bProjectileCanBurn;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated, Category = "Attributes")
+	bool bCanJump;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated, Category = "Attributes")
+	bool bCanReflect;
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	void SetProjectileCanBurn(bool CanBurn);
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	void SetCanReflect(bool CanReflect);
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	void SetCanJump(bool CanJump);
+
 };

@@ -18,3 +18,5 @@ directly in the ActionComponent which didn't work since the action component cha
 the actions whenever a new pawn was spawned.
 
 If I was to extend this project, I would build in multiplayer support. Furthermore, I would try and outsource my code from blueprint to C++ to help optimization.
+
+For grading, I also added the muzzle flash extension from one of the previous assignments.

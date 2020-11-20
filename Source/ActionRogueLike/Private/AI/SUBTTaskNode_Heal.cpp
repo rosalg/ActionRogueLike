@@ -7,6 +7,9 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "SUAttributeComponent.h"
 
+/*
+* This is a task that has the SUAI Heal 50 HP.
+*/
 EBTNodeResult::Type USUBTTaskNode_Heal::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) {
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	if (AIController) {

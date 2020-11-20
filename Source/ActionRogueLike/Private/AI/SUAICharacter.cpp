@@ -28,6 +28,9 @@ ASUAICharacter::ASUAICharacter()
 	TargetActorKey = "TargetActor";
 }
 
+/*
+* Initialize any event listeners.
+*/
 void ASUAICharacter::PostInitializeComponents() {
 	Super::PostInitializeComponents();
 
@@ -35,6 +38,15 @@ void ASUAICharacter::PostInitializeComponents() {
 	AttributeComp->OnHealthChanged.AddDynamic(this, &ASUAICharacter::OnHealthChanged);
 }
 
+
+/***************************************
+Getters/Setters
+****************************************/
+
+/*
+* Gets the target actor.
+* @return Returns the AActor* that the SUAICharacter is targeting.
+*/
 AActor* ASUAICharacter::GetTargetActor() const {
 	AAIController* AIC = Cast<AAIController>(GetController());
 	if (AIC) {
@@ -43,26 +55,33 @@ AActor* ASUAICharacter::GetTargetActor() const {
 	return nullptr;
 }
 
-void ASUAICharacter::OnPawnSeen(APawn* Pawn) {
-	if (GetTargetActor() != Pawn) {
-		SetTargetActor(Pawn);
-
-		USUWorldUserWidget* NewWidget = CreateWidget<USUWorldUserWidget>(GetWorld(), SpottedWidgetClass);
-		if (NewWidget) {
-			NewWidget->AttachedActor = this;
-
-			NewWidget->AddToViewport(10);
-		}
-	}
-}
-
+/*
+* Sets the target of the SUAICharacter.
+* @param NewTarget - The target to be shot at.
+* @return None
+*/
 void ASUAICharacter::SetTargetActor(AActor* NewTarget) {
 	AAIController* AIC = Cast<AAIController>(GetController());
 	if (AIC) {
-		 AIC->GetBlackboardComponent()->SetValueAsObject(TargetActorKey, NewTarget);
+		AIC->GetBlackboardComponent()->SetValueAsObject(TargetActorKey, NewTarget);
 	}
 }
 
+/***************************************
+Events
+****************************************/
+
+/*
+* 
+* This event handles the pawn's health changing by updating the pawn's target to be the damage dealer, creating a
+* health bar if necessary, making it hitflash, and handling death.
+* 
+* @param InstigatorActor - Actor the caused the health change.
+* @param OwningComp - Component of Actor to make changes to.
+* @param NewHealth - The health after changes have been made.
+* @param Delta - The amount the health changed by.
+* @return None.
+*/
 void ASUAICharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeComponent* OwningComp, float NewHealth, float Delta) {
 	if (Delta < 0.0f) {
 
@@ -95,6 +114,27 @@ void ASUAICharacter::OnHealthChanged(AActor* InstigatorActor, USUAttributeCompon
 
 			// set lifespan
 			SetLifeSpan(10.0f);
+		}
+	}
+}
+
+/*
+* This function handles the logic for when the SUAICharacter sees the player.
+* It is implemented using pawn sensing. Currently, it updates the target of the
+* SUAICharacter then adds a small notification to the Viewport.
+* 
+* @param Pawn - The pawn that we saw.
+* @return None
+*/
+void ASUAICharacter::OnPawnSeen(APawn* Pawn) {
+	if (GetTargetActor() != Pawn) {
+		SetTargetActor(Pawn);
+
+		USUWorldUserWidget* NewWidget = CreateWidget<USUWorldUserWidget>(GetWorld(), SpottedWidgetClass);
+		if (NewWidget) {
+			NewWidget->AttachedActor = this;
+
+			NewWidget->AddToViewport(10);
 		}
 	}
 }

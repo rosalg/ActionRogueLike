@@ -12,6 +12,9 @@ USUBTTaskNode_RangedAttack::USUBTTaskNode_RangedAttack() {
 	MaxBulletSpread = 2.0f;
 }
 
+/*
+* This makes the SUAI shoot at TargetActor with MaxBulletSpread spread.
+*/
 EBTNodeResult::Type USUBTTaskNode_RangedAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) {
 	AAIController* MyController = OwnerComp.GetAIOwner();
 

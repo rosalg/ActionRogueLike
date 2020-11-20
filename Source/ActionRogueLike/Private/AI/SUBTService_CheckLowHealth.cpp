@@ -5,6 +5,11 @@
 #include "SUAttributeComponent.h"
 #include "AI/SUAICharacter.h"
 
+/*
+* This function checks if the SUAICharacter is low. Every set of ticks, it will
+* check if it has dropped below its health threshold, and if it has, it will change
+* some boolean.
+*/
 void USUBTService_CheckLowHealth::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 

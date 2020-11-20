@@ -5,6 +5,17 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
 
+/*
+* This function is overridden from the BTService class,
+* allowing us to implement a service that is used in a AI Logic tree.
+* Currently, it takes our blackboard, gets the target actor, gets the AI controller,
+* Then, if we are in range of the target actor, update a boolean to say the user of this service
+* is ready to perform some action.
+* 
+* @param OwnerComp - Owning component of tick node.
+* @param NodeMemory - Memory
+* @param DeltaSeconds - Amount of time passed per tick.
+*/
 void USUBTService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
